@@ -4,7 +4,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                url: 'git@github.com:pratapsuryawanshilatur/CI-CD-Pipeline-for-a-Simple-Web-Application.git'
+                url: 'https://github.com/pratapsuryawanshilatur/CI-CD-Pipeline-for-a-Simple-Web-Application.git'
             }
         }
         stage('Build Docker Image') {
