@@ -1,13 +1,6 @@
 pipeline {
     agent any
     stages {
-        stage('Test Docker') {
-            steps{
-                sh 'docker --version'
-                sh 'docker run hello-world'
-            }
-
-        }
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t my-python-app .'
