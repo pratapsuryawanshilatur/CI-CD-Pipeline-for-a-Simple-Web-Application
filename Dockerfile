@@ -20,7 +20,7 @@ COPY --chown=appuser:appuser app.py .
 ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s, --start-period=5s, --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s, --retries=3 \
     CMD curl -f http://localhost:5000/ || exit 1
 
 EXPOSE 5000
