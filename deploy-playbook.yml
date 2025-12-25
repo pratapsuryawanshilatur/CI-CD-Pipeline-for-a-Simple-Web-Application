@@ -1,0 +1,43 @@
+---
+- name: Deploy Dockerized Python Web App to AWS
+  hosts: webservers
+  become: yes
+  vars:
+    docker_image: "pratap2298/my-python-app:latest"
+
+  tasks:
+    - name: Update apt package cache
+      apt: 
+        update_cache: yes
+
+    - name: Install required system packages
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: Start and enable Docker service
+      systemd: 
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Docker image from Docker Hub
+      docker_image: 
+        name: "{{ docker_image }}"
+        source: pull
+
+    - name: Stop and remove existing container (if any)
+      docker_container:
+        name: python-webapp
+        state: absent
+
+    - name: Run the application container
+      docker_container:
+        name: python-webapp
+        image: "{{ docker_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "5000:5000"
