@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return "Hello, DevOps Learner! My CI/CD pipeline is working!"
+    return "Hello, DevOps Learner! My CI/CD pipeline is working! Let's see."
 
 @app.route('/health')
 def health():
