@@ -8,7 +8,7 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 FROM python:3.9-slim
 WORKDIR /app
 
-# Create a non-root user for security
+# Create a non-root user for security--demo
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
