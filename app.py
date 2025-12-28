@@ -1,10 +1,16 @@
 from flask import Flask
+from waitress import serve  # Production WSGI server
+
 app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return "Hello, DevOps Learner! My CI/Cd pipeline is working! Bye!"
+    return "Hello, DevOps Learner! My CI/CD pipeline is working!"
+
+@app.route('/health')
+def health():
+    return "OK", 200
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
-     
+    # Production server
+    serve(app, host='0.0.0.0', port=5000)

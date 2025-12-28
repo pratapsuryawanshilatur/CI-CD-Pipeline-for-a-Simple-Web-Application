@@ -1,0 +1,11 @@
+clusterName: my-fargate-cluster
+region: eu-west-2
+v: 2
+serviceAccount:
+  create: false
+  name: aws-load-balancer-controller
+vpcId: vpc-0570f04887d4342c0
+subnets:
+  - subnet-06037f7b64176b58a
+  - subnet-022b30b2d8acf80ce
+  - subnet-0f2007ab0b7e6c16e
