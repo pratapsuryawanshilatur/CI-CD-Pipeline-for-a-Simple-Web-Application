@@ -93,6 +93,7 @@ pipeline {
             }
 
         }
+        '''
         stage('Deploy to AWS with Ansible') {
             steps {
                 script {
@@ -102,6 +103,7 @@ pipeline {
             }
 
         }
+        '''
         stage('Cleanup Local') {
             steps {
                 script {
