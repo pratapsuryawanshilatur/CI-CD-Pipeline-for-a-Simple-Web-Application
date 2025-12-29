@@ -80,7 +80,7 @@ pipeline {
                         // Wait for deployment
                         bat """
                             ping -n 30 127.0.0.1 > nul
-                            kubectl rollout.status deployment/python-webapp-fargate --timeout=120s
+                            kubectl rollout status deployment/python-webapp-fargate --timeout=120s
                         """
                         // Get NLB URL
                         bat """
