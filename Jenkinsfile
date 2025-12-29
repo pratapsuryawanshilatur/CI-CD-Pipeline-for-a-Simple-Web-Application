@@ -3,15 +3,14 @@ pipeline {
     environment {
         // Use your actual Docker Hub username here
         DOCKER_IMAGE = 'pratap2298/my-python-app'
-        DOCKER_TAG = "${env.BUILD_ID}"
+        //DOCKER_TAG = "${env.BUILD_ID}"
     }
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
                     // For Windows, use bat with direct variable access
-                    bat 'docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% -t %DOCKER_IMAGE%:waitress .'
-                    bat 'docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% -t %DOCKER_IMAGE%:latest .'
+                    bat 'docker build -t %DOCKER_IMAGE%:waitress .'
                 }
             }
         }
@@ -44,7 +43,7 @@ pipeline {
                         bat """
                             echo %DOCKER_PASSWORD% | docker login --username pratap2298 --password-stdin
                             docker push %DOCKER_IMAGE%:waitress
-                            docker push %DOCKER_IMAGE%:latest
+                            
                         """
                     }
                 }
@@ -81,12 +80,12 @@ pipeline {
                         // Wait for deployment
                         bat """
                             ping -n 30 127.0.0.1 > nul
-                            kubectl rollout status deployment/python-webapp-fargate --timeout=120s
+                            kubectl rollout.status deployment/python-webapp-fargate --timeout=120s
                         """
                         // Get NLB URL
                         bat """
                             echo "Getting Load Balancer URL..."
-                            kubectl get service python-webapp-service -o jsonpath="{.sttaus.loadBalancer.ingress[0].hostname}"
+                            kubectl get service python-webapp-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
                             echo ""
                         """
                     }
@@ -107,7 +106,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker rmi %DOCKER_IMAGE%:waitress %DOCKER_IMAGE%:latest 2>nul || echo "Images already removed"
+                        docker rmi %DOCKER_IMAGE%:waitress %DOCKER_IMAGE%:waitress 2>nul || echo "Images already removed"
                     """
                 }
             }
@@ -115,7 +114,7 @@ pipeline {
     }
     post {
         success {
-            echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:%DOCKER_TAG%"
+            echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:waitress"
         }
         failure {
             echo "Pipeline failed!"
