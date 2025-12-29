@@ -10,8 +10,8 @@ pipeline {
             steps {
                 script {
                     // For Windows, use bat with direct variable access
-                    bat 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:waitress .'
-                    bat 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest .'
+                    bat 'docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% -t %DOCKER_IMAGE%:waitress .'
+                    bat 'docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% -t %DOCKER_IMAGE%:latest .'
                 }
             }
         }
@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker run -d --name test-container -p 5000:5000 ${DOCKER_IMAGE}:waitress
+                        docker run -d --name test-container -p 5000:5000 %DOCKER_IMAGE%:waitress
                         timeout /t 5 /nobreak > nul
                         curl -f http://localhost:5000 || exit 1
                     """
@@ -42,9 +42,9 @@ pipeline {
                     // First, create the credentials in Jenkins if you haven't
                     withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
                         bat """
-                            echo ${DOCKER_PASSWORD} | docker login --username pratap2298 --password-stdin
-                            docker push ${DOCKER_IMAGE}:waitress
-                            docker push ${DOCKER_IMAGE}:latest
+                            echo %DOCKER_PASSWORD% | docker login --username pratap2298 --password-stdin
+                            docker push %DOCKER_IMAGE%:waitress
+                            docker push %DOCKER_IMAGE%:latest
                         """
                     }
                 }
@@ -107,7 +107,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker rmi ${DOCKER_IMAGE}:waitress ${DOCKER_IMAGE}:latest 2>nul || echo "Images already removed"
+                        docker rmi %DOCKER_IMAGE%:waitress %DOCKER_IMAGE%:latest 2>nul || echo "Images already removed"
                     """
                 }
             }
@@ -115,7 +115,7 @@ pipeline {
     }
     post {
         success {
-            echo "Pipeline succeeded! Image pushed to Docker Hub as ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:%DOCKER_TAG%"
         }
         failure {
             echo "Pipeline failed!"
