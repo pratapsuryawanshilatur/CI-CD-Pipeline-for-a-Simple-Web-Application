@@ -58,11 +58,11 @@ pipeline {
                     ]) {
                         // Update deployment.yaml with new image tag
                         bat """
-                            # Update the deployment YAML with new image tag
+                            
                             kubectl set image deployment/python-webapp-fargate python-webapp=%DOCKER_IMAGE%:%DOCKER_TAG% --record
                             
-                            # Alternative: Edit the YAML file directly
-                            # (if you have yq or sed installed)
+                            
+                            
                         """
                         
                         bat """
