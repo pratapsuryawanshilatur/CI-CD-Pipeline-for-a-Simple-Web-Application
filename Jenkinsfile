@@ -19,7 +19,7 @@ pipeline {
                 script {
                     bat """
                         docker run -d --name test-container -p 5000:5000 %DOCKER_IMAGE%:waitress
-                        timeout /t 5 /nobreak > nul
+                        ping -n 30 127.0.0.1 > nul
                         curl -f http://localhost:5000 || exit 1
                     """
                 }
