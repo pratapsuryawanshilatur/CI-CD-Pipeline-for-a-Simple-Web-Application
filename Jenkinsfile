@@ -56,20 +56,13 @@ pipeline {
                             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                         )
                     ]) {
+                        // Update deployment.yaml with new image tag
                         bat """
-                            aws configure set aws_access_key_id %AWS_ACCESS_KEY_ID%
-                            aws configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY%
-                            aws configure set region eu-west-2
-                            aws configure set output json
-                        """
-                        
-                        bat """
-                            aws eks update-kubeconfig --name my-fargate-cluster --region eu-west-2
-                        """
-                        
-                        bat """
-                            kubectl apply -f fargate-deployment.yaml
-                            kubectl apply -f fargate-service.yaml
+                            # Update the deployment YAML with new image tag
+                            kubectl set image deployment/python-webapp-fargate python-webapp=%DOCKER_IMAGE%:%DOCKER_TAG% --record
+                            
+                            # Alternative: Edit the YAML file directly
+                            # (if you have yq or sed installed)
                         """
                         
                         bat """
@@ -81,41 +74,26 @@ pipeline {
                             echo "Getting Load Balancer URL..."
                             kubectl get service python-webapp-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
                             echo ""
+                            echo "Deployment updated with image: %DOCKER_IMAGE%:%DOCKER_TAG%"
                         """
                     }
                 }
             }
         }
-        stage('Cleanup Local') {
-            steps {
-                script {
-                    bat """
-                        docker rmi %DOCKER_IMAGE%:%DOCKER_TAG% 2>nul || echo "Image already removed"
-                    """
-                }
-            }
-        }
     }
     
-    // POST section should be at the end, outside stages
     post {
-        success {
-            script {
-                echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:%DOCKER_TAG%"
-                echo "Application deployed to EKS Fargate"
-                echo "Load Balancer URL: Check kubectl get service output above"
-            }
-        }
-        failure {
-            script {
-                echo "Pipeline failed!"
-            }
-        }
         always {
             script {
-                echo "Pipeline completed"
-                // Optional: Add cleanup or notifications here
+                bat """
+                    docker rmi %DOCKER_IMAGE%:%DOCKER_TAG% 2>nul || echo "Image already removed"
+                """
             }
+        }
+        success {
+            echo "✓ Pipeline succeeded!"
+            echo "✓ Docker Image: %DOCKER_IMAGE%:%DOCKER_TAG%"
+            echo "✓ Deployed to EKS Fargate cluster"
         }
     }
 }
