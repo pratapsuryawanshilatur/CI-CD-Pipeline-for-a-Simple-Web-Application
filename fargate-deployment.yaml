@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: python-webapp
-        image: pratap2298/my-python-app:latest
+        image: pratap2298/my-python-app:waitress
+        imagePullPolicy: Always # Always pull new images
         ports:
         - containerPort: 5000
         livenessProbe:

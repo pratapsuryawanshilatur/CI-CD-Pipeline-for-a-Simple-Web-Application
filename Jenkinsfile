@@ -10,9 +10,8 @@ pipeline {
             steps {
                 script {
                     // For Windows, use bat with direct variable access
-                    bat """
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest .
-                    """
+                    bat 'docker build -t ${DOCKER_IMAGE}:waitress .'
+                    bat 'docker build -t ${DOCKER_IMAGE}:latest .'
                 }
             }
         }
@@ -20,7 +19,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker run -d --name test-container -p 5000:5000 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker run -d --name test-container -p 5000:5000 ${DOCKER_IMAGE}:waitress
                         timeout /t 5 /nobreak > nul
                         curl -f http://localhost:5000 || exit 1
                     """
@@ -44,12 +43,56 @@ pipeline {
                     withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
                         bat """
                             echo ${DOCKER_PASSWORD} | docker login --username pratap2298 --password-stdin
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            docker push ${DOCKER_IMAGE}:waitress
                             docker push ${DOCKER_IMAGE}:latest
                         """
                     }
                 }
             }
+        }
+        stage('Deploy to Kubernetes (EKS Fargate)') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'aws-eks-credentails',
+                        usernameVariable: 'AWS_ACCESS_KEY_ID'
+                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                    )]){
+                        // Configure AWS CLI
+                        bat """
+                            aws configure set aws_access_key_id %AWS_ACCESS_KEY_ID%
+                            aws configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY%
+
+                            aws configure set region eu-west-2
+                            aws configure set output json
+                        """
+
+                        // Connect to EKS cluster
+                        bat """
+                            aws eks updtae-kebconfig --name my-fargate-cluster --region eu-west-2
+                        """
+                        // Deploy to Kubernetes
+
+                        bat """
+                            kubectl apply -f fargate-deployment.yaml
+                            kubectl apply -f fargate-service.yaml
+                        """
+
+                        // Wait for deployment
+                        bat """
+                            timeout /t 30 /nobreak > nul
+                            kubectl rollout status deployment/python-webapp-fargate --timeout=120s
+                        """
+                        // Get NLB URL
+                        bat """
+                            echo "Getting Load Balancer URL..."
+                            kubectl get service python-webapp-service -o jsonpath="{.sttaus.loadBalancer.ingress[0].hostname}"
+                            echo ""
+                        """
+                    }
+                }
+            }
+
         }
         stage('Deploy to AWS with Ansible') {
             steps {
@@ -64,7 +107,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest 2>nul || echo "Images already removed"
+                        docker rmi ${DOCKER_IMAGE}:waitress ${DOCKER_IMAGE}:latest 2>nul || echo "Images already removed"
                     """
                 }
             }
