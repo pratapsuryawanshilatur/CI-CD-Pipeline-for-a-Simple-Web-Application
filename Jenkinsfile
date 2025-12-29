@@ -1,15 +1,13 @@
 pipeline {
     agent any
     environment {
-        // Use your actual Docker Hub username here
         DOCKER_IMAGE = 'pratap2298/my-python-app'
-        //DOCKER_TAG = "${env.BUILD_ID}"
     }
+    
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // For Windows, use bat with direct variable access
                     bat 'docker build -t %DOCKER_IMAGE%:waitress .'
                 }
             }
@@ -38,12 +36,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // First, create the credentials in Jenkins if you haven't
-                    withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDENTIALS2', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
                         bat """
-                            echo %DOCKER_PASSWORD% | docker login --username %DOCKER_USERNAME% --password-stdin
+                            echo %DOCKER_PASSWORD% | docker login --username pratap2298 --password-stdin
                             docker push %DOCKER_IMAGE%:waitress
-                            
                         """
                     }
                 }
@@ -52,37 +48,34 @@ pipeline {
         stage('Deploy to Kubernetes (EKS Fargate)') {
             steps {
                 script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'aws-eks-credentials',
-                        usernameVariable: 'AWS_ACCESS_KEY_ID',
-                        passwordVariable: 'AWS_SECRET_ACCESS_KEY'
-                    )]){
-                        // Configure AWS CLI
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'aws-eks-credentials',
+                            usernameVariable: 'AWS_ACCESS_KEY_ID',
+                            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                        )
+                    ]) {
                         bat """
                             aws configure set aws_access_key_id %AWS_ACCESS_KEY_ID%
                             aws configure set aws_secret_access_key %AWS_SECRET_ACCESS_KEY%
-
                             aws configure set region eu-west-2
                             aws configure set output json
                         """
-
-                        // Connect to EKS cluster
+                        
                         bat """
                             aws eks update-kubeconfig --name my-fargate-cluster --region eu-west-2
                         """
-                        // Deploy to Kubernetes
-
+                        
                         bat """
                             kubectl apply -f fargate-deployment.yaml
                             kubectl apply -f fargate-service.yaml
                         """
-
-                        // Wait for deployment
+                        
                         bat """
                             ping -n 30 127.0.0.1 > nul
                             kubectl rollout status deployment/python-webapp-fargate --timeout=120s
                         """
-                        // Get NLB URL
+                        
                         bat """
                             echo "Getting Load Balancer URL..."
                             kubectl get service python-webapp-service -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
@@ -91,24 +84,37 @@ pipeline {
                     }
                 }
             }
-
         }
         stage('Cleanup Local') {
             steps {
                 script {
                     bat """
-                        docker rmi %DOCKER_IMAGE%:waitress %DOCKER_IMAGE%:waitress 2>nul || echo "Images already removed"
+                        docker rmi %DOCKER_IMAGE%:waitress 2>nul || echo "Image already removed"
                     """
                 }
             }
         }
     }
+    
+    // POST section should be at the end, outside stages
     post {
         success {
-            echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:waitress"
+            script {
+                echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:waitress"
+                echo "Application deployed to EKS Fargate"
+                echo "Load Balancer URL: Check kubectl get service output above"
+            }
         }
         failure {
-            echo "Pipeline failed!"
+            script {
+                echo "Pipeline failed!"
+            }
+        }
+        always {
+            script {
+                echo "Pipeline completed"
+                // Optional: Add cleanup or notifications here
+            }
         }
     }
 }
