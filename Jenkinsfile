@@ -2,13 +2,14 @@ pipeline {
     agent any
     environment {
         DOCKER_IMAGE = 'pratap2298/my-python-app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}-waitress"  // Use build number
     }
     
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat 'docker build -t %DOCKER_IMAGE%:waitress .'
+                    bat 'docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% .'
                 }
             }
         }
@@ -16,7 +17,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker run -d --name test-container -p 5000:5000 %DOCKER_IMAGE%:waitress
+                        docker run -d --name test-container -p 5000:5000 %DOCKER_IMAGE%:%DOCKER_TAG%
                         ping -n 30 127.0.0.1 > nul
                         curl -f http://localhost:5000 || exit 1
                     """
@@ -39,7 +40,7 @@ pipeline {
                     withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
                         bat """
                             echo %DOCKER_PASSWORD% | docker login --username pratap2298 --password-stdin
-                            docker push %DOCKER_IMAGE%:waitress
+                            docker push %DOCKER_IMAGE%:%DOCKER_TAG%
                         """
                     }
                 }
@@ -89,7 +90,7 @@ pipeline {
             steps {
                 script {
                     bat """
-                        docker rmi %DOCKER_IMAGE%:waitress 2>nul || echo "Image already removed"
+                        docker rmi %DOCKER_IMAGE%:%DOCKER_TAG% 2>nul || echo "Image already removed"
                     """
                 }
             }
@@ -100,7 +101,7 @@ pipeline {
     post {
         success {
             script {
-                echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:waitress"
+                echo "Pipeline succeeded! Image pushed to Docker Hub as %DOCKER_IMAGE%:%DOCKER_TAG%"
                 echo "Application deployed to EKS Fargate"
                 echo "Load Balancer URL: Check kubectl get service output above"
             }
