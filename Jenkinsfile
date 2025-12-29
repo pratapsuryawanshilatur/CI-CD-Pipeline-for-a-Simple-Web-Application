@@ -68,7 +68,7 @@ pipeline {
 
                         // Connect to EKS cluster
                         bat """
-                            aws eks updtae-kebconfig --name my-fargate-cluster --region eu-west-2
+                            aws eks update-kubeconfig --name my-fargate-cluster --region eu-west-2
                         """
                         // Deploy to Kubernetes
 
