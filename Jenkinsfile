@@ -55,7 +55,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(
                         credentialsId: 'aws-eks-credentails',
-                        usernameVariable: 'AWS_ACCESS_KEY_ID'
+                        usernameVariable: 'AWS_ACCESS_KEY_ID',
                         passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                     )]){
                         // Configure AWS CLI
