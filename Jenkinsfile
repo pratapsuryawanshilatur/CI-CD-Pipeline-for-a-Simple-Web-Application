@@ -93,17 +93,6 @@ pipeline {
             }
 
         }
-        '''
-        stage('Deploy to AWS with Ansible') {
-            steps {
-                script {
-                    // This runs the playbook from the WSL environment
-                    bat 'wsl ansible-playbook -i inventory.ini deploy-playbook.yml'
-                }
-            }
-
-        }
-        '''
         stage('Cleanup Local') {
             steps {
                 script {
