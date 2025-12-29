@@ -39,9 +39,9 @@ pipeline {
             steps {
                 script {
                     // First, create the credentials in Jenkins if you haven't
-                    withCredentials([string(credentialsId: 'DOCKER_HUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB_CREDENTIALS2', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         bat """
-                            echo %DOCKER_PASSWORD% | docker login --username pratap2298 --password-stdin
+                            echo %DOCKER_PASSWORD% | docker login --username %DOCKER_USERNAME% --password-stdin
                             docker push %DOCKER_IMAGE%:waitress
                             
                         """
