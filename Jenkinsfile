@@ -10,8 +10,8 @@ pipeline {
             steps {
                 script {
                     // For Windows, use bat with direct variable access
-                    bat 'docker build -t ${DOCKER_IMAGE}:waitress .'
-                    bat 'docker build -t ${DOCKER_IMAGE}:latest .'
+                    bat 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:waitress .'
+                    bat 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} -t ${DOCKER_IMAGE}:latest .'
                 }
             }
         }
